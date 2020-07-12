@@ -11,12 +11,9 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: [7.4, 7.3, 7.2.15]
+        php: [7.4]
         laravel: [7.*]
-        dependency-version: [prefer-lowest, prefer-stable]
-        include:
-          - laravel: 7.*
-            testbench: 5.*
+        dependency-version: [prefer-stable]
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }} - ${{ matrix.dependency-version }}
 
@@ -40,17 +37,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-progress --no-update
           composer update --${{ matrix.dependency-version }} --prefer-dist --no-progress --no-suggest
 
-    - name: Run Tests
-      run: composer run-script test
-
-    - name: Upload Coverage to Coveralls
-      env:
-        COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COVERALLS_SERVICE_NAME: github
+    - name: Run static analysis
       run: |
-        rm -rf composer.* vendor/
-        composer require cedx/coveralls
-        vendor/bin/coveralls build/logs/clover.xml
+        vendor/bin/phpstan analyze --debug
